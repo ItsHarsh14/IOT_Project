@@ -1,0 +1,41 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'poppins', sans-serif;
+    box-sizing: border-box;
+}
+.intro {
+    text-align: center;
+}
+.class_main {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #A7EDE7, #f3eaea);
+    padding: 10px;
+    
+}
+.inside-components{
+    text-align: center;
+}
+.image-box {
+    border: 2px solid #45CFDD;
+    /* Medium thickness border with black color */
+    display: inline-block;
+    /* Maintain the box size based on image dimensions */
+    padding: none;
+    
+    /* Optional padding around the image */
+}
+.image-box img {
+    width: 400px;
+    /* Desired width of the image */
+    height:auto;
+    /* Maintain aspect ratio by adjusting height automatically */
+}
+
+
+
+.code-section{
+    background-color: #A7EDE7;
+    font-size: small;
+}

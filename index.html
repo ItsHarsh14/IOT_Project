@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="class_main">
+        <div class="intro">
+            <h1>Project Name - Person Counter</h1>
+            <h2>Harsh Kumar Verma (B20203)<br>Anand(B20028)</h2>
+        </div>
+        <div class="description">
+            <h3>Short Description of Problem</h3>
+            <p>Our aim is to design and develop a room occupancy monitoring system that can count the number of people
+                entering and
+                leaving each
+                room. The system will consist of four rooms, and we need to keep track of the occupancy level of each
+                room. Two sensor
+                will be installed
+                in each room (1 at entrance and 1 exit) to detect the number of people entering or leaving it. The
+                system should be able
+                to send this data to
+                Raspberry Pi and store it in a CSV file for further analysis. We will use NodeMCU microcontrollers and
+                Raspberry Pi to
+                build the system.</p>
+        </div>
+        <div class="components">
+            <h3>Components required</h3>
+            <div class="inside-components">
+                <h5>2 NodeMCU(ESP8266MOD) microcontrollers</h5>
+                <div class="image-box">
+                    <img src="images/nodemcu.jpg" alt="Image Description">
+                </div>
+                
+                <h5>8 Ultrasonic sensors</h5>
+                <div class="image-box">
+                    <img src="images/hcsr04.jpg" alt="Image Description">
+                </div>
+                <h5>1 Raspberry Pi</h5>
+                <div class="image-box">
+                    <img src="images/raspberrypi.jpg" alt="Image Description">
+                </div>
+                <h5>Breadboard And Jumper Wires</h5>
+                <div class="image-box">
+                    <img src="images/breadboard.jpg" alt="Image Description">
+                </div>
+            </div>
+            
+        </div>
+        <div class="solution">
+            <h3>Solution Details</h3>
+            <p>We are using here NodeMCU microcontrollers and ultrasonic sensors to detect the occupancy of each room.
+                We designed our
+                circuit in
+                this way 1 nodeMCU controlling 4 ultrasonic sensors. Simply 1 NodeMCU can handle 2 rooms.so we are using
+                2 nodeMCU for
+                handling
+                4 rooms. In each room there is 2 ultrasonic sensors 1 of them count number of people enter and other one
+                is counts
+                number of people exit
+                and these both are running by NodeMCU. When sensor detect person so it will send data to nodeMCU and
+                NodeMCU send this
+                data to
+                node-red Wirelessly through UDP Protocol. We created a csv file in Rpi desktop folder so the data which
+                comes in
+                node-red will collected
+                in csv file.
+            </p>
+            
+            
+
+        </div>
+        <div class="control">
+            <h3>Control Flow</h3>
+            <p>Each NodeMCU will be connected to four Ultrasonic sensors. The Ultrasonic sensor will detect the presence
+                of people and
+                send a signal
+                to the NodeMCU. The NodeMCU will count the number of people entering or leaving the room and send this
+                data to node-red.
+                After that
+                this node-red save this data into a csv file. This Node-red UI has 4 part each part shows occupancy
+                level of a
+                particular room. We also add
+                a warning system in this Project if occupancy in any room more than 10 that room will show a warning
+                “Room X limit
+                exceeded” (X can
+                be 1,2,3,4).
+            </p>
+            <div class="inside-components">
+                <div class="image-box">
+                    <img src="images/room1,2.jpg" alt="Image Description">
+                </div>
+            
+                <div class="image-box">
+                    <img src="images/room2,3.jpg" alt="Image Description">
+                </div>
+            
+                <div class="image-box">
+                    <img src="images/room3,4.jpg" alt="Image Description">
+                </div>
+            </div>
+        </div>
+        <div class="algorithm">
+            <h3>Algorithm</h3>
+            <p>The algorithm running on the NodeMCU will be simple. It will detect the person when it is in range of
+                ultrasonic sensor
+                (here we set
+                10cm). When Sensor detects person at entrance door then we increase numPeople by one or if it detects at
+                exit door then
+                we decrease
+                numPeople by 1. This data NodeMCU send to node-red through UDP.</p>
+            
+
+            <pre class="code-section">
+                <h3>Code for 1st Nodemcu</h3>
+              <code>
+            #include  &lt;ESP8266WiFi.h&gt;
+                #include &lt;WiFiUdp.h&gt;
+                    #include &lt;NewPing.h&gt;
+            
+                        #define TRIGGER_PIN_ENTRANCE1 D1
+                        #define ECHO_PIN_ENTRANCE1 D2
+                        #define TRIGGER_PIN_EXIT1 D3
+                        #define ECHO_PIN_EXIT1 D4
+                        #define TRIGGER_PIN_ENTRANCE2 D5
+                        #define ECHO_PIN_ENTRANCE2 D6
+                        #define TRIGGER_PIN_EXIT2 D7
+                        #define ECHO_PIN_EXIT2 D8
+                        #define MAX_DISTANCE 10
+            
+                        NewPing entranceSensor1(TRIGGER_PIN_ENTRANCE1, ECHO_PIN_ENTRANCE1, MAX_DISTANCE);
+                        NewPing exitSensor1(TRIGGER_PIN_EXIT1, ECHO_PIN_EXIT1, MAX_DISTANCE);
+                        NewPing entranceSensor2(TRIGGER_PIN_ENTRANCE2, ECHO_PIN_ENTRANCE2, MAX_DISTANCE);
+                        NewPing exitSensor2(TRIGGER_PIN_EXIT2, ECHO_PIN_EXIT2, MAX_DISTANCE);
+            
+                        int numPeople1 = 0;
+                        int numPeople2 = 0;
+            
+                        const char* ssid = "your wifi name";
+                        const char* password = "your wifi password";
+                        const char* udpAddress = "192.168.227.54"; // IP address of the Raspberry Pi
+                        unsigned int udpPort = 6666;
+            
+                        WiFiUDP udp;
+            
+                        void setup() {
+                        Serial.begin(9600);
+            
+                        // Connect to Wi-Fi
+                        WiFi.begin(ssid, password);
+                        while (WiFi.status() != WL_CONNECTED) {
+                        delay(1000);
+                        Serial.println("Connecting to WiFi...");
+                        }
+                        Serial.println("Connected to WiFi.");
+                        }
+            
+                        void loop() {
+                        int entranceDist1 = entranceSensor1.ping_cm();
+                        delay(10);
+                        int exitDist1 = exitSensor1.ping_cm();
+                        delay(10);
+            
+                        if (entranceDist1 > 0 && entranceDist1 &lt; MAX_DISTANCE) { numPeople1++; 
+                            Serial.println("Person entered Room 1. Number of people in Room 1: " + String(numPeople1));
+                            if (numPeople1 > 10) {
+                                Serial.println(" Warning: Room 1 limit exceeded."); // sendWarning("Room 3"); } 
+                                sendData( numPeople1 ,numPeople2); } 
+                                if (exitDist1> 0 && exitDist1 &lt; MAX_DISTANCE)
+                                 { numPeople1--; 
+                                    Serial.println("Person exited Room 1. Number of people in Room 1: " + String(numPeople1));
+                                sendData( numPeople1 , numPeople2);
+                        }
+            
+                        int entranceDist2 = entranceSensor2.ping_cm();
+                        delay(10);
+                        int exitDist2 = exitSensor2.ping_cm();
+                        delay(10);
+            
+                        if (entranceDist2 > 0 && entranceDist2 &lt; MAX_DISTANCE) {
+                        numPeople2++;
+                        Serial.println(" Person entered Room 2. Number of people in Room 2: " + String(numPeople2));
+                        if (numPeople2 > 10) {
+                            Serial.println(" Warning: Room 2 limit exceeded."); // sendWarning("Room 2"); } // sendData("Room 4",numPeople2); 
+                            sendData( numPeople1 , numPeople2);
+                         } 
+                        if (exitDist2> 0 && exitDist2 &lt; MAX_DISTANCE) {
+                             numPeople2--; 
+                            Serial.println("Person exited Room 2. Number of people in Room 2: " + String(numPeople2));
+
+                        //    sendData(" Room 4", numPeople2); 
+                        sendData( numPeople1 , numPeople2); 
+                            } 
+                        delay(1000);    
+                        } 
+                        // void sendData(const char* roomName, int numPeople) { 
+                            // udp.beginPacket(udpAddress, udpPort); 
+                            //   udp.print(roomName); // udp.print(": ");
+                            //   udp.print(numPeople);
+                            //   udp.endPacket();
+                            // }
+                        void sendData(int room3, int room4) {
+                        udp.beginPacket(udpAddress, udpPort);
+                            udp.print(room3);
+                         udp.print(" ,"); udp.print(room4); udp.endPacket(); }
+              </code>
+            </pre>
+           
+            <pre class="code-section">
+                <h3>code for 2nd Nodemcu</h3>
+                    
+                          <code>
+                        #include &lt;ESP8266WiFi.h &gt;
+                            #include &lt;WiFiUdp.h &gt;
+                                #include &lt;NewPing.h &gt;
+                        
+                                    #define TRIGGER_PIN_ENTRANCE1 D1
+                                    #define ECHO_PIN_ENTRANCE1 D2
+                                    #define TRIGGER_PIN_EXIT1 D3
+                                    #define ECHO_PIN_EXIT1 D4
+                                    #define TRIGGER_PIN_ENTRANCE2 D5
+                                    #define ECHO_PIN_ENTRANCE2 D6
+                                    #define TRIGGER_PIN_EXIT2 D7
+                                    #define ECHO_PIN_EXIT2 D8
+                                    #define MAX_DISTANCE 10
+                        
+                                    NewPing entranceSensor1(TRIGGER_PIN_ENTRANCE1, ECHO_PIN_ENTRANCE1, MAX_DISTANCE);
+                                    NewPing exitSensor1(TRIGGER_PIN_EXIT1, ECHO_PIN_EXIT1, MAX_DISTANCE);
+                                    NewPing entranceSensor2(TRIGGER_PIN_ENTRANCE2, ECHO_PIN_ENTRANCE2, MAX_DISTANCE);
+                                    NewPing exitSensor2(TRIGGER_PIN_EXIT2, ECHO_PIN_EXIT2, MAX_DISTANCE);
+                        
+                                    int numPeople1 = 0;
+                                    int numPeople2 = 0;
+                        
+                                    const char* ssid = "your wifi name";
+                                    const char* password = "your wifi password";
+                                    const char* udpAddress = "192.168.227.54"; // IP address of the Raspberry Pi
+                                    unsigned int udpPort = 6666;
+                        
+                                    WiFiUDP udp;
+                        
+                                    void setup() {
+                                    Serial.begin(9600);
+                        
+                                    // Connect to Wi-Fi
+                                    WiFi.begin(ssid, password);
+                                    while (WiFi.status() != WL_CONNECTED) {
+                                    delay(1000);
+                                    Serial.println("Connecting to WiFi...");
+                                    }
+                                    Serial.println("Connected to WiFi.");
+                                    }
+                        
+                                    void loop() {
+                                    int entranceDist1 = entranceSensor1.ping_cm();
+                                    delay(10);
+                                    int exitDist1 = exitSensor1.ping_cm();
+                                    delay(10);
+                        
+                                    if (entranceDist1 > 0 && entranceDist1 &lt; MAX_DISTANCE) { 
+                                        numPeople1++;
+                                        Serial.println("Person entered Room 3. Number of people in Room 1: " + String(numPeople1));
+                                         if (numPeople1 > 10) {
+                                         Serial.println(" Warning: Room 3 limit exceeded."); // sendWarning("Room 3"); 
+                                        } 
+                                        sendData( numPeople1 ,numPeople2); 
+                                        }
+                                         if (exitDist1> 0 && exitDist1 &lt; MAX_DISTANCE) { 
+                                            numPeople1--; Serial.println("Person exited Room 3. Number of people in Room 1: " + String(numPeople1));
+                                             sendData( numPeople1 , numPeople2);
+                                          }
+                        
+                                        int entranceDist2 = entranceSensor2.ping_cm();
+                                        delay(10);
+                                        int exitDist2 = exitSensor2.ping_cm();
+                                        delay(10);
+                        
+                                    if (entranceDist2 > 0 && entranceDist2 &lt; MAX_DISTANCE) {
+                                    numPeople2++;
+                                    Serial.println(" Person entered Room 4. Number of people in Room 2: " + String(numPeople2));
+                                    if (numPeople2 > 10) {
+                                    Serial.println(" Warning: Room 4 limit exceeded."); // sendWarning("Room 2"); } // sendData("Room 4",numPeople2);
+                                    sendData( numPeople1 , numPeople2); 
+                                    } 
+                                    if (exitDist2> 0 && exitDist2 &lt; MAX_DISTANCE) {
+                                     numPeople2--; 
+                                     Serial.println("Person exited Room 4. Number of people in Room 2: " + String(numPeople2));
+
+                                     //    sendData(" Room 4", numPeople2); sendData( numPeople1 , numPeople2); } 
+                                     delay(1000); } 
+                                     // void sendData(const char* roomName, int numPeople) {
+                                         // udp.beginPacket(udpAddress, udpPort); 
+                                         // udp.print(roomName); // udp.print(": ");
+                                        //   udp.print(numPeople);
+                                        //   udp.endPacket();
+                                    // }
+                                    void sendData(int room3, int room4) {
+                                    udp.beginPacket(udpAddress, udpPort);
+                                    udp.print(room3);
+                                    udp.print(" ,"); udp.print(room4); udp.endPacket(); }
+                          </code>
+                        </pre>
+
+            <p>The code is same for both NodeMCU we commented some points that we do not want for first node-MCU and for
+                second NodeMCU
+                we
+                removed that comment and mark comment that points that we second one. We also attached zip file of this
+                code with this
+                report.</p>
+
+        </div>
+        <div class="screenshot">
+            <h3>Screenshot/Photograph about the system</h3>
+            <div class="inside-components">
+                <div class="image-box">
+                    <img src="images/s1.jpg" alt="Image Description">
+                </div>
+                <br>
+            
+                <div class="image-box">
+                    <img src="images/s2.jpg" alt="Image Description">
+                </div>
+            
+                
+            </div>
+            <h3>Outputs</h3>
+            <div class="inside-components">
+                <div class="image-box">
+                    <img src="images/o1.jpg" alt="Image Description">
+                </div>
+                <br>
+            
+                <div class="image-box">
+                    <img src="images/o2.jpg" alt="Image Description">
+                </div>
+                <br>
+            
+                <div class="image-box">
+                    <img src="images/o3.jpg" alt="Image Description">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
